@@ -588,10 +588,15 @@ const struct KNSemiModalOptionKeys KNSemiModalOptionKeys = {
 }
 
 -(void)dismissSemiModalView {
-	[self dismissSemiModalViewWithCompletion:nil];
+    [self dismissSemiModalViewWithCompletion:nil];
 }
 
--(void)dismissSemiModalViewWithCompletion:(void (^)(void))completion {
+-(void)dismissSemiModalViewWithCompletion:(KNTransitionCompletionBlock)completion {
+    [self dismissSemiModalViewWithAnimationStart:nil completion:completion];
+}
+
+-(void)dismissSemiModalViewWithAnimationStart:(KNTransitionCompletionBlock)animationStart
+                                   completion:(KNTransitionCompletionBlock)completion {
     // Look for presenting controller if available
     UIViewController * prstingTgt = self;
     UIViewController * presentingController = objc_getAssociatedObject(prstingTgt.view, kSemiModalPresentingViewController);
@@ -602,7 +607,7 @@ const struct KNSemiModalOptionKeys KNSemiModalOptionKeys = {
     
     if (presentingController) {
         objc_setAssociatedObject(prstingTgt.view, kSemiModalPresentingViewController, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        [presentingController dismissSemiModalViewWithCompletion:completion];
+        [presentingController dismissSemiModalViewWithAnimationStart:animationStart completion:completion];
         return;
     }
     
@@ -629,16 +634,16 @@ const struct KNSemiModalOptionKeys KNSemiModalOptionKeys = {
     
     NSTimeInterval duration = [self kn_animationOutDuration];
     
-	UIViewController *vc = objc_getAssociatedObject(self, kSemiModalViewController);
-	KNTransitionCompletionBlock dismissBlock = objc_getAssociatedObject(self, kSemiModalDismissBlock);
+    UIViewController *vc = objc_getAssociatedObject(self, kSemiModalViewController);
+    KNTransitionCompletionBlock dismissBlock = objc_getAssociatedObject(self, kSemiModalDismissBlock);
     objc_setAssociatedObject(self, kSemiModalViewController, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(self, kSemiModalDismissBlock, nil, OBJC_ASSOCIATION_COPY_NONATOMIC);
 	
-	// Child controller containment
-	[vc willMoveToParentViewController:nil];
-	if ([vc respondsToSelector:@selector(beginAppearanceTransition:animated:)]) {
-		[vc beginAppearanceTransition:NO animated:YES]; // iOS 6
-	}
+	  // Child controller containment
+    [vc willMoveToParentViewController:nil];
+    if ([vc respondsToSelector:@selector(beginAppearanceTransition:animated:)]) {
+        [vc beginAppearanceTransition:NO animated:YES]; // iOS 6
+    }
     
     CGRect modalFrameFinal = modalView.frame;
     
@@ -665,6 +670,9 @@ const struct KNSemiModalOptionKeys KNSemiModalOptionKeys = {
     CGFloat finalAlpha = modalView.alpha;
     
     if (transitionStyle == KNSemiModalTransitionStyleFade) finalAlpha = 0.0f;
+
+    if (animationStart)
+        animationStart();
     
     [UIView animateWithDuration:duration animations:^{
         modalView.alpha = finalAlpha;
