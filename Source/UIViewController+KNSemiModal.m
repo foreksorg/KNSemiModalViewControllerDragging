@@ -244,6 +244,12 @@ const struct KNSemiModalOptionKeys KNSemiModalOptionKeys = {
 
 @implementation UIViewController (KNSemiModal)
 
+-(UIViewController *)presentedSemiViewController
+{
+    return objc_getAssociatedObject(self, kSemiModalViewController);
+}
+
+
 -(KNSemiModalModalPosition)kn_modalPosition
 {
     return [[self ym_optionOrDefaultForKey:KNSemiModalOptionKeys.modalPosition] unsignedIntegerValue];
@@ -411,11 +417,11 @@ const struct KNSemiModalOptionKeys KNSemiModalOptionKeys = {
         CGFloat customHeight = [[self ym_optionOrDefaultForKey:KNSemiModalOptionKeys.customHeight] doubleValue];
         
         if (customWidth > 0.0f) {
-            modalFrame = CGRectSetWidth(modalFrame, customWidth);
+            modalFrame.size.width = customWidth;
         }
         
         if (customHeight > 0.0f) {
-            modalFrame = CGRectSetHeight(modalFrame, customHeight);
+            modalFrame.size.height = customHeight;
         }
         
         CGFloat modalHeight = modalFrame.size.height;
@@ -504,7 +510,8 @@ const struct KNSemiModalOptionKeys KNSemiModalOptionKeys = {
             overlayBackground.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
             overlayBackground.alpha = 0.0f;
             
-            parentAlpha = RANGE(0.0f, (1.0f - parentAlpha), 1.0f);
+            parentAlpha = 1.0f - parentAlpha;
+            parentAlpha = ((parentAlpha < 0.f) ? 0.f : (parentAlpha > 1.f) ? 1.f : parentAlpha);
             fadedView = overlayBackground;
         }
         [overlay addSubview:overlayBackground];

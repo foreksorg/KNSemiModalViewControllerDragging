@@ -61,6 +61,7 @@ typedef void (^KNTransitionCompletionBlock)(void);
 
 @interface UIViewController (KNSemiModal)
 
+@property (readonly) UIViewController *presentedSemiViewController;
 
 /**
  Displays a view controller over the receiver, which is "dimmed".
